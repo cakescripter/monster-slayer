@@ -14,21 +14,20 @@ const app = Vue.createApp({
             mmaxAP: 15,
 
             currentRound: 0,
-            winner: null
+            winner: null,
+            GameOn: true,
+            logMessages: []
         }
     },
     computed: {
         healthBar() {
             return function (health) {
-                if (health > 0) {
-                    return { width: health + "%" };
-                } else {
-                    return { width: "0%" };
-                }
-            };
+                if (health < 0) { health = 0 }
+                return { width: health + "%" }
+            }
         },
         healthBarM() {
-            return this.healthBar(this.monsterHealth);
+            return this.healthBar(this.monsterHealth)
         },
         healthBarP() {
             return this.healthBar(this.playerHealth);
@@ -58,39 +57,57 @@ const app = Vue.createApp({
         }
     },
     methods: {
+        startNew() {
+            this.playerHealth = 100
+            this.monsterHealth = 100
+            this.winner = null
+            this.currentRound = 0
+            this.logMessages = []
+        },
         attackMonster() {
-            const attackValue = getRandomValue(this.pminAP, this.pmaxAP);
-            this.monsterHealth -= attackValue;
-
-            this.attackPlayer();
-            this.currentRound++;
+            const attackValue = getRandomValue(this.pminAP, this.pmaxAP)
+            this.monsterHealth -= attackValue
+            this.addLogMessage('player', 'attack', attackValue)
+            this.attackPlayer()
+            this.currentRound++
 
         },
         attackPlayer() {
-            const attackValue = getRandomValue(this.mminAP, this.mmaxAP);
-            this.playerHealth -= attackValue;
+            const attackValue = getRandomValue(this.mminAP, this.mmaxAP)
+            this.playerHealth -= attackValue
+            this.addLogMessage('monster', 'attack', attackValue)
         },
         specialAttack() {
             const minSP = (this.pminAP * 1.5)
             const maxSP = (this.pmaxAP * 1.5)
-            const attackValue = getRandomValue(minSP, maxSP);
-            this.monsterHealth -= attackValue;
-
-            this.attackPlayer();
-            this.currentRound++;
+            const attackValue = getRandomValue(minSP, maxSP)
+            this.monsterHealth -= attackValue
+            this.addLogMessage('player', 'special-attack', attackValue)
+            this.attackPlayer()
+            this.currentRound++
 
         },
         healPlayer() {
-            const healValue = getRandomValue(this.pmaxAP, this.mmaxAP);
+            const healValue = getRandomValue(this.pmaxAP, this.mmaxAP)
             if (this.playerHealth + healValue > 100) {
-                this.playerHealth = 100;
+                this.playerHealth = 100
             } else {
-                this.playerHealth += healValue;
+                this.playerHealth += healValue
             }
-
-            this.attackPlayer();
-            this.currentRound++;
+            this.addLogMessage('player', 'heal', healValue)
+            this.attackPlayer()
+            this.currentRound++
+        },
+        surrender() {
+            this.winner = 'monster'
+        },
+        addLogMessage(who, what, value) {
+            this.logMessages.unshift({
+                actionBy: who,
+                actionType: what,
+                actionValue: value
+            })
         }
     }
 })
-app.mount('#game');
+app.mount('#game')
